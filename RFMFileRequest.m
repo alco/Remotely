@@ -106,7 +106,6 @@
 #pragma mark
 
 - (void)didFinishLoading {
-	NSLog(@"did finish loading file from url %@", [self url]);
 	if ([[self delegate] respondsToSelector:@selector(fileRequestDidFinishLoading:)])
 		[[self delegate] fileRequestDidFinishLoading:self];
 }
