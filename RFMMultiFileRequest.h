@@ -1,6 +1,21 @@
 #import <Foundation/Foundation.h>
 
 @class RFMFileRequest;
+@class RFMMultiFileRequest;
+
+// Delegates are not required to conform to this protocol. It simply
+// documents supported callbacks.
+@protocol RFMMultiFileRequestDelegate<NSObject>
+@optional
+- (void)multiFileRequest:(RFMMultiFileRequest *)request
+		didFailWithError:(NSError *)error
+					 url:(NSURL *)url;
+
+- (void)multiFileRequest:(RFMMultiFileRequest *)request
+	  didLoadItemFromURL:(NSURL *)url;
+
+- (void)multiFileRequestDidFinishLoading:(RFMMultiFileRequest *)request;
+@end
 
 @interface RFMMultiFileRequest : NSObject {
 	NSUInteger fileIndex_;
