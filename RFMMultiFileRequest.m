@@ -1,6 +1,12 @@
 #import "RFMMultiFileRequest.h"
 #import "RFMFileRequest.h"
 
+@interface RFMMultiFileRequest()
+- (void)didLoadItem;
+- (void)didFinishLoading;
+@end
+
+
 @implementation RFMMultiFileRequest
 
 @synthesize url;
@@ -42,13 +48,15 @@
 		fileRequest_ = [[RFMFileRequest alloc] init];
 		[fileRequest_ setUsingTemporaryFile:[self isUsingTemporaryFiles]];
 		[fileRequest_ setPath:[self path]];
-		[fileRequest_ setDelegate:(id<RFMFileRequestDelegate>)self];
+		[fileRequest_ setDelegate:self];
 	}
 	[fileRequest_ setUrl:[[self url] URLByAppendingPathComponent:[[self files] objectAtIndex:fileIndex_]]];
 	[fileRequest_ start];
 }
 
 - (void)start {
+	if (fileIndex_ >= [[self files] count])
+		return;
 	[self startFileRequest];
 }
 
@@ -61,11 +69,24 @@
 
 - (void)fileRequestDidFinishLoading:(RFMFileRequest *)request {
 	++fileIndex_;
+	[self didLoadItem];
 	if (fileIndex_ >= [[self files] count]) {
-		NSLog(@"finish loading all files");
+		[self didFinishLoading];
 	} else {
 		[self startFileRequest];
 	}
+}
+
+#pragma mark
+
+- (void)didLoadItem {
+	if ([[self delegate] respondsToSelector:@selector(multiFileRequest:didLoadItemFromURL:)])
+		[[self delegate] multiFileRequest:self didLoadItemFromURL:[fileRequest_ url]];
+}
+
+- (void)didFinishLoading {
+	if ([[self delegate] respondsToSelector:@selector(multiFileRequestDidFinishLoading:)])
+		[[self delegate] multiFileRequestDidFinishLoading:self];
 }
 
 @end
