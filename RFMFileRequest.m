@@ -2,7 +2,9 @@
 
 @interface RFMFileRequest()
 @property (nonatomic, retain) NSFileHandle *fileHandle;
+@property (nonatomic, retain) NSMutableData *data;
 - (NSString *)tmpFilePath;
+- (void)appendData:(NSData *)aData;
 - (void)didFinishLoading;
 @end
 
@@ -14,6 +16,7 @@
 @synthesize delegate;
 
 @synthesize fileHandle;
+@synthesize data;
 
 #pragma mark -
 
@@ -35,17 +38,23 @@
 - (void)dealloc {
 	[url release];
 	[path release];
+	[fileHandle release];
+	[data release];
 	[super dealloc];
 }
 
 #pragma mark -
 
 - (void)start {
-	[[NSFileManager defaultManager] createFileAtPath:[self tmpFilePath] contents:nil attributes:nil];
+	if ([self isUsingTemporaryFile]) {
+		[[NSFileManager defaultManager] createFileAtPath:[self tmpFilePath] contents:nil attributes:nil];
 
-	NSFileHandle *handle = [NSFileHandle fileHandleForWritingAtPath:[self tmpFilePath]];
-	assert(handle);
-	[self setFileHandle:handle];
+		NSFileHandle *handle = [NSFileHandle fileHandleForWritingAtPath:[self tmpFilePath]];
+		assert(handle);
+		[self setFileHandle:handle];
+	} else {
+		[self setData:[NSMutableData data]];
+	}
 
 	NSURLConnection *conn =
 		[NSURLConnection connectionWithRequest:
@@ -62,32 +71,33 @@
 #pragma mark -
 #pragma mark NSURLConnection delegate
 
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-	[[self fileHandle] writeData:data];
+- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)aData {
+	[self appendData:aData];
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-	[[self fileHandle] closeFile];
-	[self setFileHandle:nil];
-
-	NSString *finalPath;
 	NSFileManager *fm = [NSFileManager defaultManager];
-	// First check if target path points at an actual file
+	NSString *finalPath;
 	BOOL isDirectory;
 	if ([fm fileExistsAtPath:[self path] isDirectory:&isDirectory]) {
-		if (isDirectory) {
-		    finalPath = [[self path] stringByAppendingPathComponent:[[[self url] absoluteString] lastPathComponent]];
-			[fm removeItemAtPath:finalPath error:NULL];
-		} else {
-			[fm removeItemAtPath:[self path] error:NULL];
-		}
+		if (isDirectory)
+			finalPath = [[self path] stringByAppendingPathComponent:[[[self url] absoluteString] lastPathComponent]];
 	} else {
 		finalPath = [self path];
 	}
 
-	NSError *error = nil;
-	if (![fm moveItemAtPath:[self tmpFilePath] toPath:finalPath error:&error])
-		NSLog(@"error moving tmp file to target path %@", error);
+	if ([self isUsingTemporaryFile]) {
+		[[self fileHandle] closeFile];
+		[self setFileHandle:nil];
+		[fm removeItemAtPath:finalPath error:NULL];
+
+		NSError *error = nil;
+		if (![fm moveItemAtPath:[self tmpFilePath] toPath:finalPath error:&error])
+			NSLog(@"error moving tmp file to target path %@", error);
+	} else {
+		[[self data] writeToFile:finalPath atomically:YES];
+		[self setData:nil];
+	}
 
 	[self didFinishLoading];
 }
@@ -101,6 +111,13 @@
 
 - (NSString *)tmpFilePath {
 	return [NSTemporaryDirectory() stringByAppendingPathComponent:[[[[self url] absoluteString] lastPathComponent] stringByAppendingString:@".tmp.part"]];
+}
+
+- (void)appendData:(NSData *)aData {
+	if ([self isUsingTemporaryFile])
+		[[self fileHandle] writeData:aData];
+	else
+		[[self data] appendData:aData];
 }
 
 #pragma mark
