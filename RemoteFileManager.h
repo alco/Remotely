@@ -9,7 +9,9 @@
 - (void)remoteFileManager:(RemoteFileManager *)rfm didFinishLoadingFiles:(id)result;
 @end
 
-@interface RemoteFileManager : NSObject
+@interface RemoteFileManager : NSObject {
+	NSMutableArray *requests_;
+}
 
 @property (nonatomic, assign) id delegate;
 @property (nonatomic, copy) NSURL *url;

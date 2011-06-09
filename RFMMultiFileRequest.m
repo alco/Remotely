@@ -34,9 +34,11 @@
 }
 
 - (void)dealloc {
+	delegate = nil;
 	[url release];
 	[files release];
 	[path release];
+	[fileRequest_ stop];
 	[fileRequest_ release];
 	[super dealloc];
 }

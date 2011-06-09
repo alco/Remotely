@@ -12,12 +12,14 @@
 - (id)initWithURL:(NSURL *)url {
 	if ((self = [super init])) {
 		[self setUrl:url];
+		requests_ = [[NSMutableArray alloc] init];
 	}
 	return self;
 }
 
 - (void)dealloc {
 	[url_ release];
+	[requests_ release];
 	[super dealloc];
 }
 
@@ -27,6 +29,8 @@
 	RFMFileRequest *request = [[RFMFileRequest alloc] initWithURL:[[self url] URLByAppendingPathComponent:remotePath] localPath:localPath];
 	[request setDelegate:self];
 	[request start];
+	[requests_ addObject:request];
+	[request release];
 }
 
 - (void)loadFilesFromList:(NSArray *)list atPath:(NSString *)path toLocalPath:(NSString *)localPath {
@@ -36,6 +40,8 @@
 										   localPath:localPath];
 	[multiRequest setDelegate:self];
 	[multiRequest start];
+	[requests_ addObject:multiRequest];
+	[multiRequest release];
 }
 
 #pragma mark -
@@ -43,7 +49,7 @@
 - (void)fileRequestDidFinishLoading:(RFMFileRequest *)aRequest {
 	if ([[self delegate] respondsToSelector:@selector(remoteFileManager:didFinishLoadingFile:)])
 		[[self delegate] remoteFileManager:self didFinishLoadingFile:aRequest];
-	[aRequest release];
+	[requests_ removeObject:aRequest];
 }
 
 - (void)multiFileRequest:(RFMMultiFileRequest *)request didLoadItemFromURL:(NSURL *)url {
@@ -54,7 +60,7 @@
 - (void)multiFileRequestDidFinishLoading:(RFMMultiFileRequest *)request {
 	if ([[self delegate] respondsToSelector:@selector(remoteFileManager:didFinishLoadingFiles:)])
 		[[self delegate] remoteFileManager:self didFinishLoadingFiles:request];
-	[request release];
+	[requests_ removeObject:request];
 }
 
 @end
