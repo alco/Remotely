@@ -52,7 +52,8 @@
 		[fileRequest_ setPath:[self path]];
 		[fileRequest_ setDelegate:self];
 	}
-	[fileRequest_ setUrl:[[self url] URLByAppendingPathComponent:[[self files] objectAtIndex:fileIndex_]]];
+	NSURL *newURL = [NSURL URLWithString:[[[self url] absoluteString] stringByAppendingPathComponent:[[self files] objectAtIndex:fileIndex_]]];
+	[fileRequest_ setUrl:newURL];
 	[fileRequest_ start];
 }
 

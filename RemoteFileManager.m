@@ -31,7 +31,8 @@
 
 - (void)loadFileAtPath:(NSString *)remotePath toLocalPath:(NSString *)localPath force:(BOOL)force
 {
-	RFMFileRequest *request = [[RFMFileRequest alloc] initWithURL:[[self url] URLByAppendingPathComponent:remotePath] localPath:localPath force:force];
+	NSURL *newURL = [NSURL URLWithString:[[[self url] absoluteString] stringByAppendingPathComponent:remotePath]];
+	RFMFileRequest *request = [[RFMFileRequest alloc] initWithURL:newURL localPath:localPath force:force];
 	[request setDelegate:self];
 	[request start];
 	[requests_ addObject:request];
@@ -39,8 +40,9 @@
 }
 
 - (void)loadFilesFromList:(NSArray *)list atPath:(NSString *)path toLocalPath:(NSString *)localPath {
+	NSURL *newURL = [NSURL URLWithString:[[[self url] absoluteString] stringByAppendingPathComponent:path]];
 	RFMMultiFileRequest *multiRequest =
-		[[RFMMultiFileRequest alloc] initWithBaseURL:[[self url] URLByAppendingPathComponent:path]
+		[[RFMMultiFileRequest alloc] initWithBaseURL:newURL
 											fileList:list
 										   localPath:localPath];
 	[multiRequest setDelegate:self];
