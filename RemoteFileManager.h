@@ -19,6 +19,7 @@
 - (id)initWithURL:(NSURL *)url;
 
 - (void)loadFileAtPath:(NSString *)remotePath toLocalPath:(NSString *)localPath;
+- (void)loadFileAtPath:(NSString *)remotePath toLocalPath:(NSString *)localPath force:(BOOL)force;
 - (void)loadFilesFromList:(NSArray *)list atPath:(NSString *)path toLocalPath:(NSString *)localPath;
 
 @end

@@ -2,6 +2,7 @@
 
 @interface RFMFileRequest()
 @property (nonatomic, retain) NSURLConnection *connection;
+@property (nonatomic) BOOL force;
 @property (nonatomic, retain) NSFileHandle *fileHandle;
 @property (nonatomic, retain) NSMutableData *data;
 @property (nonatomic) BOOL dontWriteToDestination;
@@ -18,6 +19,7 @@
 @synthesize delegate;
 
 @synthesize connection;
+@synthesize force;
 @synthesize fileHandle;
 @synthesize data;
 @synthesize dontWriteToDestination;
@@ -32,9 +34,14 @@
 }
 
 - (id)initWithURL:(NSURL *)aUrl localPath:(NSString *)aPath {
+	return [self initWithURL:aUrl localPath:aPath force:NO];
+}
+
+- (id)initWithURL:(NSURL *)aUrl localPath:(NSString *)aPath force:(BOOL)aForce {
 	if ([self init]) {
 		[self setUrl:aUrl];
 		[self setPath:aPath];
+		[self setForce:aForce];
 	}
 	return self;
 }

@@ -26,7 +26,12 @@
 #pragma mark -
 
 - (void)loadFileAtPath:(NSString *)remotePath toLocalPath:(NSString *)localPath {
-	RFMFileRequest *request = [[RFMFileRequest alloc] initWithURL:[[self url] URLByAppendingPathComponent:remotePath] localPath:localPath];
+	[self loadFileAtPath:remotePath toLocalPath:localPath force:NO];
+}
+
+- (void)loadFileAtPath:(NSString *)remotePath toLocalPath:(NSString *)localPath force:(BOOL)force
+{
+	RFMFileRequest *request = [[RFMFileRequest alloc] initWithURL:[[self url] URLByAppendingPathComponent:remotePath] localPath:localPath force:force];
 	[request setDelegate:self];
 	[request start];
 	[requests_ addObject:request];

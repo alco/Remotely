@@ -19,6 +19,7 @@
 
 - (id)init;
 - (id)initWithURL:(NSURL *)url localPath:(NSString *)path;
+- (id)initWithURL:(NSURL *)url localPath:(NSString *)path force:(BOOL)force;
 
 - (void)start;
 - (void)stop;
