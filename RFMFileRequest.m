@@ -1,6 +1,7 @@
 #import "RFMFileRequest.h"
 
 @interface RFMFileRequest()
+@property (nonatomic, retain) NSURLConnection *connection;
 @property (nonatomic, retain) NSFileHandle *fileHandle;
 @property (nonatomic, retain) NSMutableData *data;
 - (NSString *)tmpFilePath;
@@ -15,6 +16,7 @@
 @synthesize usingTemporaryFile;
 @synthesize delegate;
 
+@synthesize connection;
 @synthesize fileHandle;
 @synthesize data;
 
@@ -40,6 +42,8 @@
 	[path release];
 	[fileHandle release];
 	[data release];
+	[connection cancel];
+	[connection release];
 	[super dealloc];
 }
 
@@ -60,12 +64,14 @@
 		[NSURLConnection connectionWithRequest:
 		 [NSURLRequest requestWithURL:[self url]] delegate:self];
 	[conn start];
+	self.connection = conn;
 
 	NSLog(@"start loading file at url %@", [self url]);
 }
 
 - (void)stop {
-
+	[self.connection cancel];
+	self.connection = nil;
 }
 
 #pragma mark -
