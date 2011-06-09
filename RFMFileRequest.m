@@ -83,13 +83,11 @@
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
 	NSFileManager *fm = [NSFileManager defaultManager];
-	NSString *finalPath;
+	NSString *finalPath = [self path];
 	BOOL isDirectory;
 	if ([fm fileExistsAtPath:[self path] isDirectory:&isDirectory]) {
 		if (isDirectory)
 			finalPath = [[self path] stringByAppendingPathComponent:[[[self url] absoluteString] lastPathComponent]];
-	} else {
-		finalPath = [self path];
 	}
 
 	if ([self isUsingTemporaryFile]) {
