@@ -101,7 +101,7 @@
 	[request release];
 	self.connection = conn;
 
-	NSLog(@"start loading file at url %@", [self url]);
+	//NSLog(@"start loading file at url %@", [self url]);
 }
 
 - (void)stop {
@@ -119,7 +119,7 @@
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
 	if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
 		if ([(NSHTTPURLResponse *)response statusCode] != 200) {
-			NSLog(@"response code = %u", [(NSHTTPURLResponse *)response statusCode]);
+			//NSLog(@"response code = %u", [(NSHTTPURLResponse *)response statusCode]);
 			self.dontWriteToDestination = YES;
 		}
 	}
