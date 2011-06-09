@@ -4,6 +4,7 @@
 @property (nonatomic, retain) NSURLConnection *connection;
 @property (nonatomic, retain) NSFileHandle *fileHandle;
 @property (nonatomic, retain) NSMutableData *data;
+@property (nonatomic) BOOL dontWriteToDestination;
 - (NSString *)tmpFilePath;
 - (void)appendData:(NSData *)aData;
 - (void)didFinishLoading;
@@ -19,6 +20,7 @@
 @synthesize connection;
 @synthesize fileHandle;
 @synthesize data;
+@synthesize dontWriteToDestination;
 
 #pragma mark -
 
@@ -50,6 +52,8 @@
 #pragma mark -
 
 - (void)start {
+	self.dontWriteToDestination = NO;
+
 	if ([self isUsingTemporaryFile]) {
 		[[NSFileManager defaultManager] createFileAtPath:[self tmpFilePath] contents:nil attributes:nil];
 
@@ -60,10 +64,34 @@
 		[self setData:[NSMutableData data]];
 	}
 
+	NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:[self url]];
+
+	NSFileManager *fm = [NSFileManager defaultManager];
+	NSString *finalPath = [self path];
+	BOOL isDirectory;
+	if ([fm fileExistsAtPath:[self path] isDirectory:&isDirectory]) {
+		if (isDirectory)
+			finalPath = [[self path] stringByAppendingPathComponent:[[[self url] absoluteString] lastPathComponent]];
+	}
+
+	NSDictionary *attributes = [fm attributesOfItemAtPath:finalPath error:NULL];
+	NSDate *date = [attributes fileModificationDate];
+	if (date && !force) {
+		NSDateFormatter *fmt = [[NSDateFormatter alloc] init];
+		NSLocale *enUSPOSIXLocale = [[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"] autorelease];
+		[fmt setLocale:enUSPOSIXLocale];
+		[fmt setTimeZone:[NSTimeZone timeZoneWithAbbreviation:@"GMT"]];
+		[fmt setDateFormat:@"ccc, dd MMM yyyy HH:mm:ss"];
+
+		NSString *dateString = [NSString stringWithFormat:@"%@ GMT", [fmt stringFromDate:date]];
+		[request addValue:dateString forHTTPHeaderField:@"If-Modified-Since"];
+		[fmt release];
+	}
+
 	NSURLConnection *conn =
-		[NSURLConnection connectionWithRequest:
-		 [NSURLRequest requestWithURL:[self url]] delegate:self];
+		[NSURLConnection connectionWithRequest:request delegate:self];
 	[conn start];
+	[request release];
 	self.connection = conn;
 
 	NSLog(@"start loading file at url %@", [self url]);
@@ -81,7 +109,21 @@
 	[self appendData:aData];
 }
 
+- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
+	if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
+		if ([(NSHTTPURLResponse *)response statusCode] != 200) {
+			NSLog(@"response code = %u", [(NSHTTPURLResponse *)response statusCode]);
+			self.dontWriteToDestination = YES;
+		}
+	}
+}
+
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
+	if ([self dontWriteToDestination]) {
+		[self didFinishLoading];
+		return;
+	}
+
 	NSFileManager *fm = [NSFileManager defaultManager];
 	NSString *finalPath = [self path];
 	BOOL isDirectory;
