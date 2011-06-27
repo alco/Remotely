@@ -6,6 +6,7 @@
 @property (nonatomic, retain) NSFileHandle *fileHandle;
 @property (nonatomic, retain) NSMutableData *data;
 @property (nonatomic) BOOL dontWriteToDestination;
+@property (nonatomic, retain) NSDateFormatter *dateFormatter;
 - (NSString *)tmpFilePath;
 - (void)appendData:(NSData *)aData;
 - (void)didFinishLoading;
@@ -23,6 +24,7 @@
 @synthesize fileHandle;
 @synthesize data;
 @synthesize dontWriteToDestination;
+@synthesize dateFormatter;
 
 #pragma mark -
 
@@ -53,6 +55,7 @@
 	[data release];
 	[connection cancel];
 	[connection release];
+	[dateFormatter release];
 	[super dealloc];
 }
 
@@ -84,15 +87,18 @@
 	NSDictionary *attributes = [fm attributesOfItemAtPath:finalPath error:NULL];
 	NSDate *date = [attributes fileModificationDate];
 	if (date && !force) {
-		NSDateFormatter *fmt = [[NSDateFormatter alloc] init];
-		NSLocale *enUSPOSIXLocale = [[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"] autorelease];
-		[fmt setLocale:enUSPOSIXLocale];
-		[fmt setTimeZone:[NSTimeZone timeZoneWithAbbreviation:@"GMT"]];
-		[fmt setDateFormat:@"ccc, dd MMM yyyy HH:mm:ss"];
+		if (dateFormatter == nil) {
+			NSDateFormatter *fmt = [[NSDateFormatter alloc] init];
+			NSLocale *enUSPOSIXLocale = [[[NSLocale alloc] initWithLocaleIdentifier:@"en_US_POSIX"] autorelease];
+			[fmt setLocale:enUSPOSIXLocale];
+			[fmt setTimeZone:[NSTimeZone timeZoneWithAbbreviation:@"GMT"]];
+			[fmt setDateFormat:@"ccc, dd MMM yyyy HH:mm:ss"];
+			self.dateFormatter = fmt;
+			[fmt release];
+		}
 
-		NSString *dateString = [NSString stringWithFormat:@"%@ GMT", [fmt stringFromDate:date]];
+		NSString *dateString = [NSString stringWithFormat:@"%@ GMT", [self.dateFormatter stringFromDate:date]];
 		[request addValue:dateString forHTTPHeaderField:@"If-Modified-Since"];
-		[fmt release];
 	}
 
 	NSURLConnection *conn =
