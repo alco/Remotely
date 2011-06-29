@@ -152,7 +152,7 @@
 
 		NSError *error = nil;
 		if (![fm moveItemAtPath:[self tmpFilePath] toPath:finalPath error:&error])
-			NSLog(@"error moving tmp file to target path %@", error);
+			;// NSLog(@"error moving tmp file to target path %@", error);
 	} else {
 		[[self data] writeToFile:finalPath atomically:YES];
 		[self setData:nil];
@@ -162,7 +162,7 @@
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-	NSLog(@"connection error %@ for url %@", error, [self url]);
+	// NSLog(@"connection error %@ for url %@", error, [self url]);
 }
 
 #pragma mark -
